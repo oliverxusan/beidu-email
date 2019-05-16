@@ -24,4 +24,38 @@ interface AdapterInterface
      * @return mixed
      */
     public function setConfig(array $config);
+
+    /**
+     * 添加抄送人
+     * @param array $cc
+     * @return mixed
+     */
+    public function addCC(array $cc);
+
+    /**
+     * 添加附件
+     * @param array $attach
+     * @return mixed
+     */
+    public function addAttachment(array $attach);
+
+    /**
+     * 设置邮件标题
+     * @param string $subject
+     * @return void
+     */
+    public function setSubject(string $subject);
+
+    /**
+     *  设置邮件主体
+     * @param string $body
+     * @return void
+     */
+    public function setBody(string $body);
+
+    /**
+     * 邮件发送
+     * @return bool
+     */
+    public function send();
 }

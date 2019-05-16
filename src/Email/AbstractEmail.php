@@ -13,11 +13,13 @@ use Email\Contract\EmailInterface;
 
 abstract class AbstractEmail implements EmailInterface
 {
+
     abstract public function build();
 
     public function send()
     {
-        // TODO: Implement send() method.
+        $msg = $this->build();
+        echo $msg;
     }
 
     public function config()
