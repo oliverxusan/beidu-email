@@ -1,0 +1,32 @@
+    {  
+      "name": "beidu/email",  
+      "description": "贝嘟邮件扩展",  
+      "keywords": [  
+        "yii2",  
+        "terrytest"  
+      ],  
+      "homepage": "https://github.com/zqy234/terrytest",  
+      "type": "",  
+      "license": "MIT",  
+      "support": {  
+        "source": "https://github.com/oliverxusan/beidu-email"  
+      },  
+      "authors": [  
+        {  
+          "name": "oliver xu",  
+          "email": "471066925@qq.com"  
+        }  
+      ],  
+      "minimum-stability": "stable",  
+      "require": {  
+        "php": ">=7.0.1"
+      },  
+      "autoload": {  
+        "psr-4": {  
+          "app\\": ""  
+        }  
+      },  
+      "config": {  
+        "process-timeout": 1800  
+      }  
+    }
