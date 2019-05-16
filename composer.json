@@ -2,10 +2,9 @@
       "name": "beidu/email",  
       "description": "贝嘟邮件扩展",  
       "keywords": [  
-        "yii2",  
-        "terrytest"  
+        "beidu"
       ],  
-      "homepage": "https://github.com/zqy234/terrytest",  
+      "homepage": "https://github.com/oliverxusan/beidu-email",  
       "type": "",  
       "license": "MIT",  
       "support": {  
