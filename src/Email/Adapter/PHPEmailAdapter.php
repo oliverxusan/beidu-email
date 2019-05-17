@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Created by Oliver xu.
  * User: Administrator
  * Date: 2019/5/16
  * Time: 10:47
@@ -8,7 +8,6 @@
 
 namespace Email\Adapter;
 
-use Email\Exceptions\ConfigException;
 use Email\Exceptions\EmailException;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -16,61 +15,66 @@ use Email\Contract\AdapterInterface;
 
 class PHPEmailAdapter implements AdapterInterface
 {
-    private static $instance = null;
-    private function __construct()
+
+    protected $phpMail = null;
+
+    public function __construct($config)
     {
+        $this->phpMail = new PHPMailer(true);
+        $this->setConfig($config);
     }
 
-    public function getInstance(array $config = []){
-        if (is_null(static::$instance)) {
-            static::$instance = new PHPMailer(true);
-            if (!$config)
-                throw new ConfigException("缺少默认值");
-            $this->setConfig($config);
-        }
-        return static::$instance;
-    }
 
     /**
      * 设置配置
      * @param array $config
      * @return mixed
      */
-    public function setConfig(array $config)
+    protected function setConfig(array $config)
     {
-        static::$instance->SMTPDebug = $config['debug'] ? $config['debug'] : 0;                                       // Enable verbose debug output
-        if ($config['isSMTP']) {
-            static::$instance->isSMTP();// Set mailer to use SMTP
+        $this->phpMail->SMTPDebug = $config['DEBUG'] ? $config['DEBUG'] : 0;                                       // Enable verbose debug output
+        if ($config['ISSMTP']) {
+            $this->phpMail->isSMTP();// Set mailer to use SMTP
         }
-        static::$instance->Host       = $config['host'];  // Specify main and backup SMTP servers
-        static::$instance->SMTPAuth   = $config['auth'];                                   // Enable SMTP authentication
-        static::$instance->Username   = $config['username'];                // SMTP username
-        static::$instance->Password   = $config['password'];                               // SMTP password
-        static::$instance->SMTPSecure = $config['secure'] ? $config['secure'] : 'tls';                                  // Enable TLS encryption, `ssl` also accepted
-        static::$instance->Port       = $config['port'] ? $config['port'] : 587;
+        $this->phpMail->Host       = $config['SMTP_HOST'];  // Specify main and backup SMTP servers
+        if ($config['SMTP_AUTH']) {
+            $this->phpMail->SMTPAuth   = $config['SMTP_AUTH'];                                   // Enable SMTP authentication
+        }
+        $this->phpMail->Username   = $config['SMTP_USER'];                // SMTP username
+        $this->phpMail->Password   = $config['SMTP_PASS'];                               // SMTP password
+        if ($config['SECURE']) {
+            $this->phpMail->SMTPSecure = $config['SECURE'];
+        }                                // Enable TLS encryption, `ssl` also accepted
+        $this->phpMail->Port       = $config['SMTP_PORT'] ? $config['SMTP_PORT'] : 587;
+
+        $this->setFrom($config['FROM_EMAIL'], $config['FROM_NAME']);
+        $replyEmail = $config['REPLY_EMAIL'] ? $config['REPLY_EMAIL'] : $config['FROM_EMAIL'];
+        $replyName = $config['REPLY_NAME'] ? $config['REPLY_NAME']: $config['FROM_NAME'];
+        $this->addReplyTo($replyEmail, $replyName);
     }
 
     /**
      * 添加抄送人
      * @param array $cc
-     * @return mixed
+     * @return object
      * @throws EmailException
      */
     public function addCC(array $cc)
     {
         if (count($cc) > 0) {
             foreach ($cc as $c) {
-                static::$instance->addCC($c);
+                $this->phpMail->addCC($c);
             }
         }else{
             throw new EmailException("抄送人不能为空");
         }
+        return $this;
     }
 
     /**
      * 添加附件
      * @param array $attach
-     * @return mixed
+     * @return object
      * @throws EmailException
      */
     public function addAttachment(array $attach)
@@ -78,51 +82,56 @@ class PHPEmailAdapter implements AdapterInterface
         if (count($attach) > 0) {
             foreach ($attach as $a) {
                 if (in_array($a)) {
-                    static::$instance->addAttachment($a[0],$a[1]);
+                    $this->phpMail->addAttachment($a[0],$a[1]);
                 }elseif (is_string($a)){
-                    static::$instance->addAttachment($a);
+                    $this->phpMail->addAttachment($a);
                 }
             }
         }else{
             throw new EmailException("添加附件不能为空");
         }
+        return $this;
     }
 
     /**
      * 设置是否为html
      * @param bool $bool
-     * @return void
+     * @return object
      */
     public function setIsHTML(bool $bool)
     {
         if ($bool == null)
             $bool = false;
-        static::$instance->isHTML($bool);
+        $this->phpMail->isHTML($bool);
+        return $this;
     }
 
     /**
      * 设置邮件标题
      * @param string $subject
-     * @return void
+     * @return object
      * @throws EmailException
      */
     public function setSubject(string $subject)
     {
         if (empty($subject))
             throw new EmailException("邮件标题不能为空");
-        static::$instance->Subject = $subject;
+        $this->phpMail->Subject = $subject;
+        return $this;
     }
 
     /**
      *  设置邮件主体
      * @param string $body
-     * @return void
+     * @return object
+     * @throws EmailException
      */
     public function setBody(string $body)
     {
         if (empty($body))
             throw new EmailException("邮件正文不能为空");
-        static::$instance->Body = $body;
+        $this->phpMail->Body = $body;
+        return $this;
     }
 
     /**
@@ -131,6 +140,40 @@ class PHPEmailAdapter implements AdapterInterface
      */
     public function send()
     {
-        return static::$instance->send();
+        return $this->phpMail->send();
+    }
+
+    /**
+     * 设置接收人
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function addAddress($email, $username = '')
+    {
+        $this->phpMail->addAddress($email, $username);
+        return $this;
+    }
+
+    /**
+     * 设置发送者
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function setFrom($email, $username = '')
+    {
+        $this->phpMail->setFrom($email, $username);
+    }
+
+    /**
+     * 设置回复者
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function addReplyTo($email, $username = '')
+    {
+        $this->phpMail->addReplyTo($email, $username);
     }
 }

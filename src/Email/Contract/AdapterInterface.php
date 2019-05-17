@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Created by Oliver xu.
  * User: Administrator
  * Date: 2019/5/16
  * Time: 10:45
@@ -11,19 +11,6 @@ namespace Email\Contract;
 
 interface AdapterInterface
 {
-    /**
-     * 单例
-     * @param array $config
-     * @return mixed
-     */
-    public function getInstance(array $config);
-
-    /**
-     * 设置配置
-     * @param array $config
-     * @return mixed
-     */
-    public function setConfig(array $config);
 
     /**
      * 添加抄送人
@@ -58,4 +45,28 @@ interface AdapterInterface
      * @return bool
      */
     public function send();
+
+    /**
+     * 设置接收人
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function addAddress($email, $username = '');
+
+    /**
+     * 设置发送者
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function setFrom($email, $username = '');
+
+    /**
+     * 设置回复者
+     * @param string $email
+     * @param string $username
+     * @return mixed
+     */
+    public function addReplyTo($email, $username = '');
 }
