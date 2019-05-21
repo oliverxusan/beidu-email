@@ -74,13 +74,12 @@ abstract class AbstractEmail implements EmailInterface
     abstract protected function getAttachments();
 
     /**
-     * 检查当天同一个账户在同一个发送时间点有没有发送 如果已发送返回true 否则返回false 从DB库检查 由派生类实现
+     * 检查当天同一个模板在同一个发送时间点有没有发送 如果已发送返回true 否则返回false 从DB库检查 由派生类实现
      * @param $template_id
-     * @param $receiver
      * @param $cron_time
      * @return bool
      */
-    abstract protected function checkTodayIsSent($template_id, $receiver, $cron_time);
+    abstract protected function checkTodayIsSent($template_id, $cron_time);
 
     /**
      * 发送邮件
@@ -96,7 +95,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($temp['template_id'],$temp['receiver'],$temp['cron_time'])) {
+            if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($temp['template_id'],$temp['cron_time'])) {
                 //获取邮件对象
                 $emailObj = $this->getFactory();
                 $errors = [];
