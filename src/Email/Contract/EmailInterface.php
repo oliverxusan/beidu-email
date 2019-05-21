@@ -13,9 +13,10 @@ interface EmailInterface
 {
     /**
      * 发送邮件
+     * @param int $id
      * @return mixed
      */
-    public function send();
+    public function send(int $id);
 
     /**
      * 获取工厂实例
@@ -85,4 +86,5 @@ interface EmailInterface
      * @return bool
      */
     public function isCronTime($time);
+
 }

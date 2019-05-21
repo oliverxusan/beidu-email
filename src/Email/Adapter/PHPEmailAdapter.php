@@ -112,7 +112,7 @@ class PHPEmailAdapter implements AdapterInterface
      * @return object
      * @throws EmailException
      */
-    public function setSubject(string $subject)
+    public function setSubject($subject)
     {
         if (empty($subject))
             throw new EmailException("邮件标题不能为空");
@@ -126,7 +126,7 @@ class PHPEmailAdapter implements AdapterInterface
      * @return object
      * @throws EmailException
      */
-    public function setBody(string $body)
+    public function setBody($body)
     {
         if (empty($body))
             throw new EmailException("邮件正文不能为空");

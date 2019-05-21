@@ -31,14 +31,14 @@ interface AdapterInterface
      * @param string $subject
      * @return void
      */
-    public function setSubject(string $subject);
+    public function setSubject($subject);
 
     /**
      *  设置邮件主体
      * @param string $body
      * @return void
      */
-    public function setBody(string $body);
+    public function setBody($body);
 
     /**
      * 邮件发送
