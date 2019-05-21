@@ -29,6 +29,8 @@ class NormalTemplate extends AbstractEmail
             'status' => 1,
             'is_html' => 0,
             'receivers' => 'xdchebe@qq.com:皮卡丘,xudongchao@beidukeji.com',
+            'template_id' => 1,
+            'attempt_num' => 0,
             'last_send_time' => 1558080796,
             'template_class' => 'NormalTemplate',
             'template_namespace' => "\Email\Template\NormalTemplate",
