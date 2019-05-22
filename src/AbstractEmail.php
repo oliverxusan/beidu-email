@@ -182,7 +182,7 @@ abstract class AbstractEmail implements EmailInterface
                 $time->stop();
                 $params = [
                     'template_id' => $id,
-                    'sender' => $temp['sender'],
+                    'sender' => $this->config['FROM_EMAIL'],
                     'receiver' => $temp['template_id'],
                     'status' => $result ? "1":"0",
                     'cron_time' => date("YmdH"),
