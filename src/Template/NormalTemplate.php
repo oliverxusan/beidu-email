@@ -118,4 +118,34 @@ class NormalTemplate extends AbstractEmail
     {
         // TODO: Implement addLastSendTime() method.
     }
+
+    /**
+     * 获取发送日志信息 从DB获取数据 由派生类实现
+     * @param int $id
+     * @return array
+     */
+    protected function getSentLogInfo($id)
+    {
+        // TODO: Implement getSentLogInfo() method.
+    }
+
+    /**
+     *  加锁 一般使用reids 进行加锁 幂等提交 默认返回类型必须是true 要不然重新发送会发不出
+     * @return bool default true
+     */
+    protected function acquireLock()
+    {
+        // TODO: Implement acquireLock() method.
+    }
+
+    /**
+     * 更新记录 由派生类实现 DB操作
+     * @param int $id
+     * @param array $param
+     * @return mixed
+     */
+    protected function saveRecord(int $id, array $param)
+    {
+        // TODO: Implement saveRecord() method.
+    }
 }

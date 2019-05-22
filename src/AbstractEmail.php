@@ -29,7 +29,7 @@ abstract class AbstractEmail implements EmailInterface
         'DEBUG'       => 0,
         'ISSMTP'      => true,
         'SMTP_AUTH'   => false,
-        'SMTP_HOST'   => 'smtp.qq.com', //SMTP服务器
+        'SMTP_HOST'   => 'smtp.exmail.qq.com', //SMTP服务器
         'SMTP_PORT'   => '465', //SMTP服务器端口
         'SMTP_USER'   => 'email@beidukeji.com', //'1309772731@qq.com', //SMTP服务器用户名
         'SMTP_PASS'   => 'ZXCV123asdf456',//'igidmfxbpyusjjhf', //SMTP服务器密码
@@ -53,6 +53,13 @@ abstract class AbstractEmail implements EmailInterface
      * @return array
      */
     abstract protected function getTemplate(int $id);
+
+    /**
+     * 获取发送日志信息 从DB获取数据 由派生类实现
+     * @param int $id
+     * @return array
+     */
+    abstract protected function getSentLogInfo($id);
 
     /**
      * 获取模板类名称
@@ -101,6 +108,20 @@ abstract class AbstractEmail implements EmailInterface
      * @return mixed
      */
     abstract protected function addLastSendTime($templateId);
+
+    /**
+     *  加锁 一般使用reids 进行加锁 幂等提交 默认返回类型必须是true 要不然重新发送会发不出
+     * @return bool default true
+     */
+    abstract protected function acquireLock();
+
+    /**
+     * 更新记录 由派生类实现 DB操作
+     * @param int $id
+     * @param array $param
+     * @return mixed
+     */
+    abstract protected function saveRecord(int $id, array $param);
 
     /**
      * 发送邮件
@@ -184,8 +205,12 @@ abstract class AbstractEmail implements EmailInterface
                     'template_id' => $id,
                     'sender' => $this->config['FROM_EMAIL'],
                     'receiver' => $temp['receivers'],
-                    'status' => $result ? "1":"0",
+                    'status' => $result ? "1":"2",
+                    'send_time' => time(),
                     'cron_time' => date("YmdH"),
+                    'is_html' => $temp['is_html'],
+                    'subject' => $temp['subject'],
+                    'body' => $temp['body'],
                     'send_template' => $this->getTemplateClass(),
                     'runtime' => $time->spent(),
                     'created_at' => time(),
@@ -219,6 +244,107 @@ abstract class AbstractEmail implements EmailInterface
 
     }
 
+    /**
+     * 再一次发送邮件
+     * @param int $id
+     * @return mixed
+     */
+    public function sendAgain(int $id){
+        $log = $this->getSentLogInfo($id);
+        if (empty($log)) {
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此日志数据','created_at'=>time()];
+            $this->addError($error);
+            return false;
+        }
+        try {
+            if ($this->acquireLock()) {
+                //记录上一次发送时间
+                $this->addLastSendTime($id);
+
+                //获取邮件对象
+                $emailObj = $this->getFactory();
+                $errors = [];
+                if ($log['status'] == 1) {
+                    array_push($errors, "此信息已经发送成功无需发送");
+                }
+
+                if ($receivers = $this->parseReceivers($log['receiver'])) {
+                    foreach ($receivers as $value) {
+                        if (!empty($value['username']))
+                            $emailObj->addAddress($value['email'], $value['username']);
+                        else
+                            $emailObj->addAddress($value['email']);
+                    }
+                } else {
+                    array_push($errors, "邮件接收人不能为空");
+                }
+
+                if ($this->isHtml($log['is_html'])) {
+                    $emailObj->setIsHTML(true);
+                } else {
+                    $emailObj->setIsHTML(false);
+                }
+                if (!$this->isSubject($log['subject'])) {
+                    array_push($errors, "邮件标题不能为空");
+                } else {
+                    $emailObj->setSubject($log['subject']);
+                }
+                if (!$this->isBody($log['body'])) {
+                    array_push($errors, "邮件正文不能为空");
+                } else {
+                    $emailObj->setBody($log['body']);
+                }
+
+                //当有错误发生的时候就
+                if (count($errors) > 0) {
+                    $error = [
+                        'template_class'=>$this->parseTemplate($this->getTemplateClass()),
+                        'reason'=>implode(",",$errors),
+                        'created_at'=>time()
+                    ];
+                    $this->addError($error);
+                    return false;
+                }
+                //如果附件存在则添加附件
+                if ($log['attachment']) {
+                    $attach = explode(",",$log['attachment']);
+                    if (count($attach)>0)
+                        $emailObj->addAttachment($attach);
+                }
+                //记录消耗时间
+                $time = new Timer();
+                $time->start();
+                $result = $emailObj->send();
+                $time->stop();
+                $params = [
+                    'status' => $result ? "1":"2",
+                    'send_time' => time(),
+                ];
+
+                //添加记录
+                $this->saveRecord($id, $params);
+                //记录发送成功与失败的数量
+                if ($result)
+                    $this->addSentOkNum($id);
+                else
+                    $this->addSentFailNum($id);
+
+                //释放内存
+                $emailObj = null;
+                $errors = null;
+                $time = null;
+                $params = null;
+                return $result;
+            }else{
+                return "正在处理请稍等";
+            }
+
+        }catch (\Exception $e){
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $this->addError($error);
+            return false;
+        }
+    }
     /**
      * 获取工厂实例
      * @return mixed
@@ -311,6 +437,19 @@ abstract class AbstractEmail implements EmailInterface
                         'username'=>''
                     ];
                 }
+            }
+        }else{
+            if (stristr($receivers,":")) {
+                list($email,$username) = explode(":",$receivers);
+                $data[] = [
+                    'email'=>$email,
+                    'username'=>$username
+                ];
+            }else{
+                $data[] = [
+                    'email'=>$receivers,
+                    'username'=>''
+                ];
             }
         }
         return $data;

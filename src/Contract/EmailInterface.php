@@ -19,6 +19,13 @@ interface EmailInterface
     public function send(int $id);
 
     /**
+     * 再一次发送邮件
+     * @param int $id
+     * @return mixed
+     */
+    public function sendAgain(int $id);
+
+    /**
      * 获取工厂实例
      * @return mixed
      */
