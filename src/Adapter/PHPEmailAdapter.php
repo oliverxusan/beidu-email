@@ -81,7 +81,7 @@ class PHPEmailAdapter implements AdapterInterface
     {
         if (count($attach) > 0) {
             foreach ($attach as $a) {
-                if (in_array($a)) {
+                if (is_array($a)) {
                     $this->phpMail->addAttachment($a[0],$a[1]);
                 }elseif (is_string($a)){
                     $this->phpMail->addAttachment($a);
