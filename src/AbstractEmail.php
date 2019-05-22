@@ -148,7 +148,7 @@ abstract class AbstractEmail implements EmailInterface
                     array_push($errors, "此邮件模板未开启");
                 }
 
-                if ($receivers = $this->parseReceivers($temp['receivers'])) {
+                if (!is_null($temp['receivers']) && $receivers = $this->parseReceivers($temp['receivers'])) {
                     foreach ($receivers as $value) {
                         if (!empty($value['username']))
                             $emailObj->addAddress($value['email'], $value['username']);
@@ -159,7 +159,7 @@ abstract class AbstractEmail implements EmailInterface
                     array_push($errors, "邮件接收人不能为空");
                 }
                 //添加抄送人
-                if ($cc = $this->parseReceivers($temp['cc'])) {
+                if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
                     foreach ($cc as $c) {
                         if (!empty($c['username']))
                             $emailObj->addCC($c['email'], $c['username']);
@@ -278,7 +278,7 @@ abstract class AbstractEmail implements EmailInterface
                     array_push($errors, "此信息已经发送成功无需发送");
                 }
 
-                if ($receivers = $this->parseReceivers($log['receiver'])) {
+                if (!is_null($log['receiver']) && $receivers = $this->parseReceivers($log['receiver'])) {
                     foreach ($receivers as $value) {
                         if (!empty($value['username']))
                             $emailObj->addAddress($value['email'], $value['username']);
@@ -290,7 +290,7 @@ abstract class AbstractEmail implements EmailInterface
                 }
 
                 //添加抄送人
-                if ($cc = $this->parseReceivers($log['cc'])) {
+                if (!is_null($log['cc']) && $cc = $this->parseReceivers($log['cc'])) {
                     foreach ($cc as $c) {
                         if (!empty($c['username']))
                             $emailObj->addCC($c['email'], $c['username']);
