@@ -27,9 +27,9 @@ abstract class AbstractEmail implements EmailInterface
      */
     private $config = [
         'DEBUG'       => 0,
-        'ISSMTP'      => false,
-        'SMTP_AUTH'   => false,
-        'SMTP_HOST'   => 'smtp.exmail.qq.com', //SMTP服务器
+        'ISSMTP'      => true,
+        'SMTP_AUTH'   => true,
+        'SMTP_HOST'   => 'ssl://smtp.exmail.qq.com', //SMTP服务器
         'SMTP_PORT'   => '465', //SMTP服务器端口
         'SMTP_USER'   => 'email@beidukeji.com', //'1309772731@qq.com', //SMTP服务器用户名
         'SMTP_PASS'   => 'ZXCV123asdf456',//'igidmfxbpyusjjhf', //SMTP服务器密码
@@ -158,6 +158,15 @@ abstract class AbstractEmail implements EmailInterface
                 } else {
                     array_push($errors, "邮件接收人不能为空");
                 }
+                //添加抄送人
+                if ($cc = $this->parseReceivers($temp['cc'])) {
+                    foreach ($cc as $c) {
+                        if (!empty($c['username']))
+                            $emailObj->addCC($c['email'], $c['username']);
+                        else
+                            $emailObj->addCC($c['email']);
+                    }
+                }
 
                 if ($this->isHtml($temp['is_html'])) {
                     $emailObj->setIsHTML(true);
@@ -206,6 +215,7 @@ abstract class AbstractEmail implements EmailInterface
                     'sender' => $this->config['FROM_EMAIL'],
                     'receiver' => $temp['receivers'],
                     'status' => $result ? "1":"2",
+                    'cc' => $temp['cc'],
                     'send_time' => time(),
                     'cron_time' => date("YmdH"),
                     'is_html' => $temp['is_html'],
@@ -279,6 +289,15 @@ abstract class AbstractEmail implements EmailInterface
                     array_push($errors, "邮件接收人不能为空");
                 }
 
+                //添加抄送人
+                if ($cc = $this->parseReceivers($log['cc'])) {
+                    foreach ($cc as $c) {
+                        if (!empty($c['username']))
+                            $emailObj->addCC($c['email'], $c['username']);
+                        else
+                            $emailObj->addCC($c['email']);
+                    }
+                }
                 if ($this->isHtml($log['is_html'])) {
                     $emailObj->setIsHTML(true);
                 } else {

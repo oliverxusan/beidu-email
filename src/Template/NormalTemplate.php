@@ -29,6 +29,7 @@ class NormalTemplate extends AbstractEmail
             'status' => 1,
             'is_html' => 0,
             'receivers' => 'xdchebe@qq.com:皮卡丘,xudongchao@beidukeji.com',
+            'cc' => '471066925@qq.com:奥特曼',
             'template_id' => 1,
             'attempt_num' => 0,
             'sender' => 'system',

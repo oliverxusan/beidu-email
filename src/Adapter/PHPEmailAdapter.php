@@ -63,7 +63,11 @@ class PHPEmailAdapter implements AdapterInterface
     {
         if (count($cc) > 0) {
             foreach ($cc as $c) {
-                $this->phpMail->addCC($c);
+                if (is_array($c)) {
+                    $this->phpMail->addCC($c[0],$c[1]);
+                }elseif (is_string($c)){
+                    $this->phpMail->addCC($c);
+                }
             }
         }else{
             throw new EmailException("抄送人不能为空");
