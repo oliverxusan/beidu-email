@@ -108,4 +108,14 @@ class NormalTemplate extends AbstractEmail
     {
         // TODO: Implement addSentFailNum() method.
     }
+
+    /**
+     * 记录上一次发送时间
+     * @param $templateId
+     * @return mixed
+     */
+    protected function addLastSendTime($templateId)
+    {
+        // TODO: Implement addLastSendTime() method.
+    }
 }
