@@ -1,4 +1,6 @@
-/.idea
+.idea
 Homestead.json
 Homestead.yaml
 .env
+vendor
+composer.lock
