@@ -46,7 +46,8 @@ class PHPEmailAdapter implements AdapterInterface
             $this->phpMail->SMTPSecure = $config['SECURE'];
         }                                // Enable TLS encryption, `ssl` also accepted
         $this->phpMail->Port       = $config['SMTP_PORT'] ? $config['SMTP_PORT'] : 587;
-        $this->phpMail->Charset  = 'UTF-8';
+        $this->phpMail->CharSet = "utf-8"; //utf-8;
+        $this->phpMail->Encoding = "base64";
         $this->setFrom($config['FROM_EMAIL'], $config['FROM_NAME']);
         $replyEmail = $config['REPLY_EMAIL'] ? $config['REPLY_EMAIL'] : $config['FROM_EMAIL'];
         $replyName = $config['REPLY_NAME'] ? $config['REPLY_NAME']: $config['FROM_NAME'];
