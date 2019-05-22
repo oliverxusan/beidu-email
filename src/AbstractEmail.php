@@ -183,7 +183,7 @@ abstract class AbstractEmail implements EmailInterface
                 $params = [
                     'template_id' => $id,
                     'sender' => $this->config['FROM_EMAIL'],
-                    'receiver' => $temp['template_id'],
+                    'receiver' => $temp['receivers'],
                     'status' => $result ? "1":"0",
                     'cron_time' => date("YmdH"),
                     'send_template' => $this->getTemplateClass(),
