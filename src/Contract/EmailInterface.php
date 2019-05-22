@@ -94,4 +94,11 @@ interface EmailInterface
      */
     public function isCronTime($time);
 
+    /**
+     * 转码
+     * @param $word
+     * @return mixed
+     */
+    public function convertEncode($word);
+
 }

@@ -176,12 +176,12 @@ abstract class AbstractEmail implements EmailInterface
                 if (!$this->isSubject($temp['subject'])) {
                     array_push($errors, "邮件标题不能为空");
                 } else {
-                    $emailObj->setSubject($temp['subject']);
+                    $emailObj->setSubject($this->convertEncode($temp['subject']));
                 }
                 if (!$this->isBody($temp['body'])) {
                     array_push($errors, "邮件正文不能为空");
                 } else {
-                    $emailObj->setBody($temp['body']);
+                    $emailObj->setBody($this->convertEncode($temp['body']));
                 }
 
                 //当有错误发生的时候就
@@ -306,12 +306,12 @@ abstract class AbstractEmail implements EmailInterface
                 if (!$this->isSubject($log['subject'])) {
                     array_push($errors, "邮件标题不能为空");
                 } else {
-                    $emailObj->setSubject($log['subject']);
+                    $emailObj->setSubject($this->convertEncode($log['subject']));
                 }
                 if (!$this->isBody($log['body'])) {
                     array_push($errors, "邮件正文不能为空");
                 } else {
-                    $emailObj->setBody($log['body']);
+                    $emailObj->setBody($this->convertEncode($log['body']));
                 }
 
                 //当有错误发生的时候就
@@ -440,7 +440,7 @@ abstract class AbstractEmail implements EmailInterface
         $data = [];
         if (empty($receivers))
             return $data;
-
+        $receivers = $this->convertEncode($receivers);
         if (stristr($receivers,",")) {
             $receiverArray = explode(",",$receivers);
             foreach ($receiverArray as $receiver) {
@@ -531,5 +531,13 @@ abstract class AbstractEmail implements EmailInterface
             return $i;
         }
         return $result;
+    }
+    /**
+     * 转码
+     * @param $word
+     * @return mixed
+     */
+    public function convertEncode($word){
+        return mb_convert_encoding($word, 'gb2312', 'utf-8');
     }
 }
