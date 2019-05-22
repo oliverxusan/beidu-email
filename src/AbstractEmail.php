@@ -96,6 +96,13 @@ abstract class AbstractEmail implements EmailInterface
     abstract protected function checkTodayIsSent($template_id, $cron_time);
 
     /**
+     * 记录上一次发送时间
+     * @param $templateId
+     * @return mixed
+     */
+    abstract protected function addLastSendTime($templateId);
+
+    /**
      * 发送邮件
      * @param int $id
      * @return mixed
@@ -110,6 +117,9 @@ abstract class AbstractEmail implements EmailInterface
         }
         try {
             if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($temp['template_id'],$temp['cron_time'])) {
+                //记录上一次发送时间
+                $this->addLastSendTime($id);
+
                 //获取邮件对象
                 $emailObj = $this->getFactory();
                 $errors = [];
@@ -171,7 +181,7 @@ abstract class AbstractEmail implements EmailInterface
                 }
                 $time->stop();
                 $params = [
-                    'template_id' => $temp['template_id'],
+                    'template_id' => $id,
                     'sender' => $temp['sender'],
                     'receiver' => $temp['template_id'],
                     'status' => $result ? "1":"0",
@@ -187,9 +197,10 @@ abstract class AbstractEmail implements EmailInterface
                 $this->addRecord($params);
                 //记录发送成功与失败的数量
                 if ($result)
-                    $this->addSentOkNum($temp['template_id']);
+                    $this->addSentOkNum($id);
                 else
-                    $this->addSentFailNum($temp['template_id']);
+                    $this->addSentFailNum($id);
+
                 //释放内存
                 $emailObj = null;
                 $errors = null;
