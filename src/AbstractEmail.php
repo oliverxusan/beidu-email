@@ -68,6 +68,20 @@ abstract class AbstractEmail implements EmailInterface
     abstract protected function addRecord(array $param);
 
     /**
+     * 添加发送成功记录数和总数
+     * @param $templateId
+     * @return mixed
+     */
+    abstract protected function addSentOkNum($templateId);
+
+    /**
+     * 添加发送失败记录数
+     * @param $templateId
+     * @return mixed
+     */
+    abstract protected function addSentFailNum($templateId);
+
+    /**
      * 获取附件 格式数组['filename','filename1'] 自由生成附件 由派生类实现
      * @return array | null
      */
@@ -171,6 +185,11 @@ abstract class AbstractEmail implements EmailInterface
 
                 //添加记录
                 $this->addRecord($params);
+                //记录发送成功与失败的数量
+                if ($result)
+                    $this->addSentOkNum($temp['template_id']);
+                else
+                    $this->addSentFailNum($temp['template_id']);
                 //释放内存
                 $emailObj = null;
                 $errors = null;

@@ -31,6 +31,7 @@ class NormalTemplate extends AbstractEmail
             'receivers' => 'xdchebe@qq.com:皮卡丘,xudongchao@beidukeji.com',
             'template_id' => 1,
             'attempt_num' => 0,
+            'sender' => 'system',
             'last_send_time' => 1558080796,
             'template_class' => 'NormalTemplate',
             'template_namespace' => "\Email\Template\NormalTemplate",
@@ -86,5 +87,25 @@ class NormalTemplate extends AbstractEmail
     protected function checkTodayIsSent($template_id, $cron_time)
     {
         return false;
+    }
+
+    /**
+     * 添加发送成功记录数和总数
+     * @param $templateId
+     * @return mixed
+     */
+    protected function addSentOkNum($templateId)
+    {
+        // TODO: Implement addSentOkNum() method.
+    }
+
+    /**
+     * 添加发送失败记录数
+     * @param $templateId
+     * @return mixed
+     */
+    protected function addSentFailNum($templateId)
+    {
+        // TODO: Implement addSentFailNum() method.
     }
 }
