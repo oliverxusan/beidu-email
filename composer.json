@@ -21,7 +21,7 @@
       },  
       "autoload": {  
         "psr-4": {  
-          "Email\\": "src/Email"
+          "Email\\": "src"
         }  
       },
       "config": {  
