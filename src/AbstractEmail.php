@@ -137,7 +137,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($temp['template_id'],date('YmdH'))) {
+            if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($id,date('YmdH'))) {
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
 
