@@ -27,7 +27,7 @@ abstract class AbstractEmail implements EmailInterface
      */
     private $config = [
         'DEBUG'       => 0,
-        'ISSMTP'      => true,
+        'ISSMTP'      => false,
         'SMTP_AUTH'   => false,
         'SMTP_HOST'   => 'smtp.exmail.qq.com', //SMTP服务器
         'SMTP_PORT'   => '465', //SMTP服务器端口
