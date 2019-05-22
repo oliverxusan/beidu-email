@@ -56,23 +56,13 @@ class PHPEmailAdapter implements AdapterInterface
 
     /**
      * 添加抄送人
-     * @param array $cc
+     * @param string $email
+     * @param string $username
      * @return object
-     * @throws EmailException
      */
-    public function addCC(array $cc)
+    public function addCC($email, $username = '')
     {
-        if (count($cc) > 0) {
-            foreach ($cc as $c) {
-                if (is_array($c)) {
-                    $this->phpMail->addCC($c[0],$c[1]);
-                }elseif (is_string($c)){
-                    $this->phpMail->addCC($c);
-                }
-            }
-        }else{
-            throw new EmailException("抄送人不能为空");
-        }
+        $this->phpMail->addCC($email, $username);
         return $this;
     }
 
@@ -181,4 +171,5 @@ class PHPEmailAdapter implements AdapterInterface
     {
         $this->phpMail->addReplyTo($email, $username);
     }
+
 }

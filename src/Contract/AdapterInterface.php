@@ -14,10 +14,11 @@ interface AdapterInterface
 
     /**
      * 添加抄送人
-     * @param array $cc
-     * @return mixed
+     * @param string $email
+     * @param string $username
+     * @return object
      */
-    public function addCC(array $cc);
+    public function addCC($email, $username);
 
     /**
      * 添加附件
@@ -52,7 +53,7 @@ interface AdapterInterface
      * @param string $username
      * @return mixed
      */
-    public function addAddress($email, $username = '');
+    public function addAddress($email, $username);
 
     /**
      * 设置发送者
@@ -60,7 +61,7 @@ interface AdapterInterface
      * @param string $username
      * @return mixed
      */
-    public function setFrom($email, $username = '');
+    public function setFrom($email, $username);
 
     /**
      * 设置回复者
@@ -68,5 +69,5 @@ interface AdapterInterface
      * @param string $username
      * @return mixed
      */
-    public function addReplyTo($email, $username = '');
+    public function addReplyTo($email, $username);
 }
