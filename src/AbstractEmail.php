@@ -595,7 +595,6 @@ abstract class AbstractEmail implements EmailInterface
      * @return boolen
      */
     public function isEmpty($value){
-
-        return is_null($value) || $hour === '';
+        return is_null($value) || $value == "" || $value == false || strtolower($value) == 'null';
     }
 }
