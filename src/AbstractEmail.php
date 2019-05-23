@@ -137,8 +137,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            $endPoint = $this->getEndPoint($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']);
-            if ($this->isCronTime($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && !$this->checkTodayIsSent($id,$endPoint)) {
+            if ($this->isCronTime($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && !$this->checkTodayIsSent($id,$endPoint = $this->getEndPoint($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']))) {
 
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
@@ -502,7 +501,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param $day
      * @param $hour
      * @param $minute
-     * @return boolen
+     * @return bool
      */
     public function isCronTime($day, $hour, $minute){
         if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
@@ -596,6 +595,6 @@ abstract class AbstractEmail implements EmailInterface
      * @return bool
      */
     public function isEmpty($value){
-        return is_null($value) || $value == "" || $value == false || strtolower($value) == 'null';
+        return (is_null($value) || $value == "");
     }
 }
