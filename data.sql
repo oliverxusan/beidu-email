@@ -32,7 +32,7 @@ CREATE TABLE `xx_email_log` (
   `cc` varchar(1000) NOT NULL DEFAULT '' COMMENT '抄送者多个用英文逗号隔开',
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态 1：成功 2：失败',
   `send_time` int(11) DEFAULT NULL COMMENT '发送时间',
-  `cron_time` int(10) NOT NULL COMMENT '定时发送时间 单位格式根据时间格式2019052115',
+  `cron_time` bigint(20) NOT NULL COMMENT '定时发送时间 单位格式根据时间格式2019052115',
   `send_template` varchar(255) NOT NULL COMMENT '发送的模板',
   `is_html` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否以html格式发送默认0否 1是',
   `subject` varchar(255) NOT NULL DEFAULT '' COMMENT '邮件标题',

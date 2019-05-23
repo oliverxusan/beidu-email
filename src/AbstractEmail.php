@@ -535,6 +535,7 @@ abstract class AbstractEmail implements EmailInterface
             }
         }
         $endPoint = $this->getEndPoint($day, $hour, $minute);
+
         if ($flag1 && $flag2 && $flag3 && !$this->checkTodayIsSent($id,$endPoint)) {
             return $endPoint;
         }else{
@@ -555,21 +556,24 @@ abstract class AbstractEmail implements EmailInterface
         $dayInt = (int) date('d');
         $hourInt = (int) date('H');
         $minuteInt = (int) date('i');
+
         if (!$this->isEmpty($day)) {
             $dayInt = $dayInt < 9 ? '0'.$dayInt:$dayInt;
             $endPoint .= $dayInt;
-        }else{
-            $endPoint = date('Ymd');
         }
 
         if (!$this->isEmpty($hour)) {
+            if ($this->isEmpty($day)) {
+                $endPoint = date('Ymd');
+            }
             $hourInt = $hourInt < 9 ? '0'.$hourInt:$hourInt;
             $endPoint .= $hourInt;
-        }else{
-            $endPoint = date('YmdH');
         }
 
         if (!$this->isEmpty($minute)) {
+            if ($this->isEmpty($hour)) {
+                $endPoint = date('YmdH');
+            }
             $minuteInt = $minuteInt < 9 ? '0'.$minuteInt:$minuteInt;
             $endPoint .= $minuteInt;
         }
