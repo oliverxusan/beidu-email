@@ -41,6 +41,7 @@ CREATE TABLE `xx_email_log` (
   `created_at` int(10) DEFAULT 0 COMMENT '添加时间',
   `attempt_num` tinyint(1) DEFAULT '0' COMMENT '重试次数',
   `attachment` varchar(1000) DEFAULT NULL COMMENT '附件多个用逗号隔开',
+  `flag` tinyint(1) DEFAULT 0 COMMINT '开关默认不打开 0是关闭 1是打开',
   PRIMARY KEY (`id`),
   KEY `MULTI_INDEX_1` (`template_id`,`cron_time`),
   KEY `template_id` (`template_id`)
