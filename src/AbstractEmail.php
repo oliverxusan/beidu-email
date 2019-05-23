@@ -551,18 +551,28 @@ abstract class AbstractEmail implements EmailInterface
      * @return string
      */
     public function getEndPoint($day, $hour, $minute){
-        $endPoint = '';
-        $dayStr = (int) date('d');
-        $hourStr = (int) date('H');
-        $minuteStr = (int) date('i');
-        if (!$this->isEmpty($day))
-            $endPoint .= $dayStr;
+        $endPoint = date('Ym');
+        $dayInt = (int) date('d');
+        $hourInt = (int) date('H');
+        $minuteInt = (int) date('i');
+        if (!$this->isEmpty($day)) {
+            $dayInt = $dayInt < 9 ? '0'.$dayInt:$dayInt;
+            $endPoint .= $dayInt;
+        }else{
+            $endPoint = date('Ymd');
+        }
 
-        if (!$this->isEmpty($hour))
-            $endPoint .= $hourStr;
+        if (!$this->isEmpty($hour)) {
+            $hourInt = $hourInt < 9 ? '0'.$hourInt:$hourInt;
+            $endPoint .= $hourInt;
+        }else{
+            $endPoint = date('YmdH');
+        }
 
-        if (!$this->isEmpty($minute))
-            $endPoint .= $minuteStr;
+        if (!$this->isEmpty($minute)) {
+            $minuteInt = $minuteInt < 9 ? '0'.$minuteInt:$minuteInt;
+            $endPoint .= $minuteInt;
+        }
 
         return $endPoint;
     }
