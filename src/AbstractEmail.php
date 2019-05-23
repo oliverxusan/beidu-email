@@ -137,7 +137,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($this->isCronTime($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && !$this->checkTodayIsSent($id,$endPoint = $this->getEndPoint($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']))) {
+            if ($endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute'])) {
 
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
@@ -498,12 +498,13 @@ abstract class AbstractEmail implements EmailInterface
 
     /**
      * 是否在指定的时间
+     * @param $id
      * @param $day
      * @param $hour
      * @param $minute
      * @return bool
      */
-    public function isCronTime($day, $hour, $minute){
+    public function isCronTime($id, $day, $hour, $minute){
         if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
             throw new EmailException("需要设定作业调度的时间");
         }
@@ -533,8 +534,12 @@ abstract class AbstractEmail implements EmailInterface
                 $flag3 = intval(date("i")) == intval($minute) ? true : false;
             }
         }
-
-        return ($flag1 && $flag2 && $flag3);
+        $endPoint = $this->getEndPoint($day, $hour, $minute);
+        if ($flag1 && $flag2 && $flag3 && $this->checkTodayIsSent($id,$endPoint)) {
+            return $endPoint;
+        }else{
+            return false;
+        }
 
     }
 
@@ -546,9 +551,6 @@ abstract class AbstractEmail implements EmailInterface
      * @return string
      */
     public function getEndPoint($day, $hour, $minute){
-        if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
-            throw new EmailException("需要设定作业调度的时间");
-        }
         $endPoint = '';
         $dayStr = (int) date('d');
         $hourStr = (int) date('H');
@@ -556,10 +558,10 @@ abstract class AbstractEmail implements EmailInterface
         if (!$this->isEmpty($day))
             $endPoint .= $dayStr;
 
-        if (!$this->isEmpty($day))
+        if (!$this->isEmpty($hour))
             $endPoint .= $hourStr;
 
-        if (!$this->isEmpty($day))
+        if (!$this->isEmpty($minute))
             $endPoint .= $minuteStr;
 
         return $endPoint;

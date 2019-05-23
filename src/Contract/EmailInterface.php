@@ -83,12 +83,13 @@ interface EmailInterface
 
     /**
      * 是否在指定的时间
+     * @param $id
      * @param $day
      * @param $hour
      * @param $minute
      * @return boolen
      */
-    public function isCronTime($day, $hour, $minute);
+    public function isCronTime($id, $day, $hour, $minute);
 
     /**
      * 解析附件
