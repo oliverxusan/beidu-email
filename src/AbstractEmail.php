@@ -535,7 +535,7 @@ abstract class AbstractEmail implements EmailInterface
             }
         }
         $endPoint = $this->getEndPoint($day, $hour, $minute);
-        if ($flag1 && $flag2 && $flag3 && $this->checkTodayIsSent($id,$endPoint)) {
+        if ($flag1 && $flag2 && $flag3 && !$this->checkTodayIsSent($id,$endPoint)) {
             return $endPoint;
         }else{
             return false;
