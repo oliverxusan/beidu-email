@@ -325,10 +325,8 @@ abstract class AbstractEmail implements EmailInterface
                     return false;
                 }
                 //如果附件存在则添加附件
-                if ($log['attachment']) {
-                    $attach = explode(",",$log['attachment']);
-                    if (count($attach)>0)
-                        $emailObj->addAttachment($attach);
+                if ($attach = $this->parseAttachment($log['attachment'])) {
+                    $emailObj->addAttachment($attach);
                 }
                 //记录消耗时间
                 $time = new Timer();
@@ -474,13 +472,18 @@ abstract class AbstractEmail implements EmailInterface
         return $data;
     }
     /**
-     * 实例化命名空间
-     * @param string $namespace
-     * @return object
+     * 解析附件
+     * @param $attachment
+     * @return null|array
      */
-    public function instanceNamespace(string $namespace) {
-        $namespace = "\\".$namespace;
-        return new $namespace;
+    public function parseAttachment($attachment){
+        if (empty($attachment))
+            return null;
+        if (stristr($attachment,",")) {
+            return explode(",",$attachment);
+        }else{
+            return [$attachment];
+        }
     }
 
     /**

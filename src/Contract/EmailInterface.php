@@ -73,12 +73,6 @@ interface EmailInterface
      */
     public function parseReceivers(string $receivers);
 
-    /**
-     * 实例化命名空间
-     * @param string $namespace
-     * @return object
-     */
-    public function instanceNamespace(string $namespace);
 
     /**
      * 是否以html格式发送邮件
@@ -94,5 +88,10 @@ interface EmailInterface
      */
     public function isCronTime($time);
 
-
+    /**
+     * 解析附件
+     * @param $attachment
+     * @return null|array
+     */
+    public function parseAttachment($attachment);
 }
