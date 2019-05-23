@@ -149,4 +149,14 @@ class NormalTemplate extends AbstractEmail
     {
         // TODO: Implement saveRecord() method.
     }
+
+    /**
+     *  解锁
+     * @param int $id
+     * @return void
+     */
+    protected function releaseLock($id)
+    {
+        // TODO: Implement releaseLock() method.
+    }
 }

@@ -111,10 +111,17 @@ abstract class AbstractEmail implements EmailInterface
 
     /**
      *  加锁 一般使用reids 进行加锁 幂等提交 默认返回类型必须是true 要不然重新发送会发不出
+     * @param int $id
      * @return bool default true
      */
-    abstract protected function acquireLock();
+    abstract protected function acquireLock($id);
 
+    /**
+     *  解锁
+     * @param int $id
+     * @return void
+     */
+    abstract protected function releaseLock($id);
     /**
      * 更新记录 由派生类实现 DB操作
      * @param int $id
@@ -137,7 +144,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute'])) {
+            if ($endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && $this->acquireLock($id)) {
 
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
@@ -233,9 +240,13 @@ abstract class AbstractEmail implements EmailInterface
                 $this->addRecord($params);
                 //记录发送成功与失败的数量
                 if ($result)
+                {
                     $this->addSentOkNum($id);
-                else
+                    $this->releaseLock($id);
+                }else{
                     $this->addSentFailNum($id);
+                    $this->releaseLock($id);
+                }
 
                 //释放内存
                 $emailObj = null;
@@ -268,7 +279,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($this->acquireLock()) {
+            if ($this->acquireLock($id)) {
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
 
@@ -341,11 +352,14 @@ abstract class AbstractEmail implements EmailInterface
 
                 //添加记录
                 $this->saveRecord($id, $params);
-                //记录发送成功与失败的数量
                 if ($result)
+                {
                     $this->addSentOkNum($id);
-                else
+                    $this->releaseLock($id);
+                }else{
                     $this->addSentFailNum($id);
+                    $this->releaseLock($id);
+                }
 
                 //释放内存
                 $emailObj = null;
