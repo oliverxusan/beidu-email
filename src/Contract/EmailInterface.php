@@ -82,11 +82,13 @@ interface EmailInterface
     public function isHtml($isHtml);
 
     /**
-     *  获取定时发送时间
-     * @param $time
-     * @return bool
+     * 是否在指定的时间
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return boolen
      */
-    public function isCronTime($time);
+    public function isCronTime($day, $hour, $minute);
 
     /**
      * 解析附件
@@ -94,4 +96,20 @@ interface EmailInterface
      * @return null|array
      */
     public function parseAttachment($attachment);
+
+    /**
+     * 判断值是否为空 为空则返回true 否则返回false
+     * @param string $value
+     * @return boolen
+     */
+    public function isEmpty($value);
+
+    /**
+     * 获取一个发送时间点
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return string
+     */
+    public function getEndPoint($day, $hour, $minute);
 }

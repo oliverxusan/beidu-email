@@ -12,7 +12,7 @@ namespace Email;
 use Email\Adapter\PHPEmailAdapter;
 use Email\Contract\EmailInterface;
 use Email\Date\Timer;
-
+use Email\Exceptions\EmailException;
 abstract class AbstractEmail implements EmailInterface
 {
     /**
@@ -137,7 +137,8 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($this->isCronTime($temp['cron_time']) && !$this->checkTodayIsSent($id,date('YmdH'))) {
+            if ($this->isCronTime($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && !$this->checkTodayIsSent($id,$endPoint = $this->getEndPoint($temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']))) {
+
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
 
@@ -217,7 +218,7 @@ abstract class AbstractEmail implements EmailInterface
                     'status' => $result ? "1":"2",
                     'cc' => $temp['cc'],
                     'send_time' => time(),
-                    'cron_time' => date("YmdH"),
+                    'cron_time' => $endPoint,
                     'is_html' => $temp['is_html'],
                     'subject' => $temp['subject'],
                     'body' => $temp['body'],
@@ -496,20 +497,73 @@ abstract class AbstractEmail implements EmailInterface
     }
 
     /**
-     *  获取定时发送时间
-     * @param $time
-     * @return bool
+     * 是否在指定的时间
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return boolen
      */
-    public function isCronTime($time) {
-        if (empty($time))
-            throw new EmailException("获取定时任务时间为空");
-        if (stristr($time,",")) {
-            return in_array(date("H"),explode(",",$time));
-        }else{
-            return date("H") == $time;
+    public function isCronTime($day, $hour, $minute){
+        if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
+            throw new EmailException("需要设定作业调度的时间");
         }
+
+        $flag1 = true;
+        $flag2 = true;
+        $flag3 = true;
+        if (!$this->isEmpty($day)) {
+            if (stristr($day,",")) {
+                $flag1 = in_array(intval(date("d")),array_map('intval',explode(",",$day))) ? true : false;
+            }else{
+                $flag1 = intval(date("d")) == intval($day) ? true : false;
+            }
+        }
+        if (!$this->isEmpty($hour)){
+            if (stristr($hour,",")) {
+                $flag2 = in_array(intval(date("H")),array_map('intval',explode(",",$hour))) ? true : false;
+            }else{
+                $flag2 = intval(date("H")) == intval($hour) ? true : false;
+            }
+        }
+
+        if (!$this->isEmpty($minute)){
+            if (stristr($minute,",")) {
+                $flag3 = in_array(intval(date("i")),array_map('intval',explode(",",$minute))) ? true : false;
+            }else{
+                $flag3 = intval(date("i")) == intval($minute) ? true : false;
+            }
+        }
+
+        return ($flag1 && $flag2 && $flag3);
+
     }
 
+    /**
+     * 获取一个发送时间点
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return string
+     */
+    public function getEndPoint($day, $hour, $minute){
+        if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
+            throw new EmailException("需要设定作业调度的时间");
+        }
+        $endPoint = '';
+        $dayStr = (int) date('d');
+        $hourStr = (int) date('H');
+        $minuteStr = (int) date('i');
+        if (!$this->isEmpty($day))
+            $endPoint .= $dayStr;
+
+        if (!$this->isEmpty($day))
+            $endPoint .= $hourStr;
+
+        if (!$this->isEmpty($day))
+            $endPoint .= $minuteStr;
+
+        return $endPoint;
+    }
     /**
      * 尝试发送 返回布尔型或者整型
      * @param PHPEmailAdapter $object
@@ -535,5 +589,13 @@ abstract class AbstractEmail implements EmailInterface
         }
         return $result;
     }
+    /**
+     * 判断值是否为空 为空则返回true 否则返回false
+     * @param string $value
+     * @return boolen
+     */
+    public function isEmpty($value){
 
+        return is_null($value) || $hour === '';
+    }
 }
