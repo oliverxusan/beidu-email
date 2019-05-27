@@ -140,6 +140,16 @@ class NormalTemplate extends AbstractEmail
     }
 
     /**
+     *  解锁
+     * @param int $id
+     * @return void
+     */
+    protected function releaseLock($id)
+    {
+        // TODO: Implement acquireLock() method.
+    }
+
+    /**
      * 更新记录 由派生类实现 DB操作
      * @param int $id
      * @param array $param
@@ -151,12 +161,11 @@ class NormalTemplate extends AbstractEmail
     }
 
     /**
-     *  解锁
-     * @param int $id
-     * @return void
+     * 获取发送不同人的邮件和附件 分组发送
+     * @return array
      */
-    protected function releaseLock($id)
+    protected function getGroupEmailAndAttach()
     {
-        // TODO: Implement releaseLock() method.
+        return null;
     }
 }

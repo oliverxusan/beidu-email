@@ -13,6 +13,7 @@ use Email\Adapter\PHPEmailAdapter;
 use Email\Contract\EmailInterface;
 use Email\Date\Timer;
 use Email\Exceptions\EmailException;
+
 abstract class AbstractEmail implements EmailInterface
 {
     /**
@@ -131,6 +132,12 @@ abstract class AbstractEmail implements EmailInterface
     abstract protected function saveRecord(int $id, array $param);
 
     /**
+     * 获取发送不同人的邮件和附件 分组发送
+     * @return array
+     */
+    abstract protected function getGroupEmailAndAttach();
+
+    /**
      * 发送邮件
      * @param int $id
      * @return mixed
@@ -144,7 +151,8 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }
         try {
-            if ($endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']) && $this->acquireLock($id)) {
+            $endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']);
+            if ($endPoint && $this->acquireLock($id)) {
 
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
@@ -154,26 +162,6 @@ abstract class AbstractEmail implements EmailInterface
                 $errors = [];
                 if (!$this->isStatus($temp['status'])) {
                     array_push($errors, "此邮件模板未开启");
-                }
-
-                if (!is_null($temp['receivers']) && $receivers = $this->parseReceivers($temp['receivers'])) {
-                    foreach ($receivers as $value) {
-                        if (!empty($value['username']))
-                            $emailObj->addAddress($value['email'], $value['username']);
-                        else
-                            $emailObj->addAddress($value['email']);
-                    }
-                } else {
-                    array_push($errors, "邮件接收人不能为空");
-                }
-                //添加抄送人
-                if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
-                    foreach ($cc as $c) {
-                        if (!empty($c['username']))
-                            $emailObj->addCC($c['email'], $c['username']);
-                        else
-                            $emailObj->addCC($c['email']);
-                    }
                 }
 
                 if ($this->isHtml($temp['is_html'])) {
@@ -191,6 +179,13 @@ abstract class AbstractEmail implements EmailInterface
                 } else {
                     $emailObj->setBody($temp['body']);
                 }
+                //当分组获取到数据之后 默认取分组中的数据不拿DB中的发送人邮件
+                $group = $this->getGroupEmailAndAttach();
+                if (!$group) {
+                    if (is_null($temp['receivers']) || !($receivers = $this->parseReceivers($temp['receivers']))) {
+                        array_push($errors, "邮件接收人不能为空");
+                    }
+                }
 
                 //当有错误发生的时候就
                 if (count($errors) > 0) {
@@ -200,59 +195,15 @@ abstract class AbstractEmail implements EmailInterface
                         'created_at'=>time()
                     ];
                     $this->addError($error);
+                    $this->releaseLock($id);
                     return false;
                 }
-                //如果附件存在则添加附件
-                if ($attach = $this->getAttachments()) {
-                    $emailObj->addAttachment($attach);
-                }
-                //记录消耗时间
-                $time = new Timer();
-                $time->start();
-                //开启尝试机制进行发送失败重发
-                $attempt_num = 0;
-                if ((int) $temp['attempt_num'] > 0) {
-                    $result = $this->trySend($emailObj, $temp['attempt_num']);
-                    $attempt_num = $result ? $result : 0;
-                }else{
-                    $result = $emailObj->send();
-                }
-                $time->stop();
-                $params = [
-                    'template_id' => $id,
-                    'sender' => $this->config['FROM_EMAIL'],
-                    'receiver' => $temp['receivers'],
-                    'status' => $result ? "1":"2",
-                    'cc' => $temp['cc'],
-                    'send_time' => time(),
-                    'cron_time' => $endPoint,
-                    'is_html' => $temp['is_html'],
-                    'subject' => $temp['subject'],
-                    'body' => $temp['body'],
-                    'send_template' => $this->getTemplateClass(),
-                    'runtime' => $time->spent(),
-                    'created_at' => time(),
-                    'attempt_num'=> $attempt_num,
-                    'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
-                ];
 
-                //添加记录
-                $this->addRecord($params);
-                //记录发送成功与失败的数量
-                if ($result)
-                {
-                    $this->addSentOkNum($id);
-                    $this->releaseLock($id);
+                if ($group) {
+                    $result = $this->handleBatch($id,$emailObj,$temp,$group,$endPoint);
                 }else{
-                    $this->addSentFailNum($id);
-                    $this->releaseLock($id);
+                    $result = $this->handleOne($id,$emailObj,$temp,$receivers,$endPoint);
                 }
-
-                //释放内存
-                $emailObj = null;
-                $errors = null;
-                $time = null;
-                $params = null;
                 return $result;
             }else{
                 return "还未到发送时间";
@@ -626,5 +577,181 @@ abstract class AbstractEmail implements EmailInterface
      */
     public function isEmpty($value){
         return (is_null($value) || $value == "");
+    }
+
+    /**
+     * 处理单个邮件发送
+     * @param $id 模板id
+     * @param $emailObj 邮件适配器对象
+     * @param $temp 获取的数据
+     * @param $receivers 接收人
+     * @param $endPoint
+     * @return bool|int
+     */
+    protected function handleOne($id,$emailObj,$temp,$receivers,$endPoint){
+        //添加发送人
+        foreach ($receivers as $value) {
+            if (!empty($value['username']))
+                $emailObj->addAddress($value['email'], $value['username']);
+            else
+                $emailObj->addAddress($value['email']);
+        }
+        //添加抄送人
+        if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
+            foreach ($cc as $c) {
+                if (!empty($c['username']))
+                    $emailObj->addCC($c['email'], $c['username']);
+                else
+                    $emailObj->addCC($c['email']);
+            }
+        }
+        //如果附件存在则添加附件
+        if ($attach = $this->getAttachments()) {
+            $emailObj->addAttachment($attach);
+        }
+        //记录消耗时间
+        $time = new Timer();
+        $time->start();
+        //开启尝试机制进行发送失败重发
+        $attempt_num = 0;
+        if ((int) $temp['attempt_num'] > 0) {
+            $result = $this->trySend($emailObj, $temp['attempt_num']);
+            $attempt_num = $result ? $result : 0;
+        }else{
+            $result = $emailObj->send();
+        }
+        $time->stop();
+        $params = [
+            'template_id' => $id,
+            'sender' => $this->config['FROM_EMAIL'],
+            'receiver' => $temp['receivers'],
+            'status' => $result ? "1":"2",
+            'cc' => $temp['cc'],
+            'send_time' => time(),
+            'cron_time' => $endPoint,
+            'is_html' => $temp['is_html'],
+            'subject' => $temp['subject'],
+            'body' => $temp['body'],
+            'send_template' => $this->getTemplateClass(),
+            'runtime' => $time->spent(),
+            'created_at' => time(),
+            'attempt_num'=> $attempt_num,
+            'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
+        ];
+
+        //添加记录
+        $this->addRecord($params);
+
+
+        //记录发送成功与失败的数量
+        if ($result)
+        {
+            $this->addSentOkNum($id);
+        }else{
+            $this->addSentFailNum($id);
+        }
+        $this->releaseLock($id);
+        //释放内存
+        $emailObj = null;
+        $errors = null;
+        $time = null;
+        $params = null;
+        return $result;
+    }
+
+    /**
+     * 处理多个邮件发送
+     * @param $id
+     * @param $emailObj
+     * @param $temp
+     * @param $group
+     * @param $endPoint
+     * @return bool|int
+     */
+    protected function handleBatch($id,$emailObj,$temp,$group,$endPoint){
+        //添加发送人
+        if (empty($group))
+            throw new EmailException("分组数据未获取到");
+        foreach ($group as $g){
+            $receivers = $g['email'];
+            if (!$receivers) {
+                $error = [
+                    'template_class'=>$this->parseTemplate($this->getTemplateClass()),
+                    'reason'=> "分组邮件不存在",
+                    'created_at'=>time()
+                ];
+                $this->addError($error);
+                continue;
+            }
+
+            foreach ($receivers as $value) {
+                $emailObj->addAddress($value);
+            }
+            //添加抄送人
+            if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
+                foreach ($cc as $c) {
+                    if (!empty($c['username']))
+                        $emailObj->addCC($c['email'], $c['username']);
+                    else
+                        $emailObj->addCC($c['email']);
+                }
+            }
+            //如果附件存在则添加附件
+            if ($attach = $g['attach']) {
+                $emailObj->addAttachment($attach);
+            }
+            //记录消耗时间
+            $time = new Timer();
+            $time->start();
+            //开启尝试机制进行发送失败重发
+            $attempt_num = 0;
+            if ((int) $temp['attempt_num'] > 0) {
+                $result = $this->trySend($emailObj, $temp['attempt_num']);
+                $attempt_num = $result ? $result : 0;
+            }else{
+                $result = $emailObj->send();
+            }
+            $time->stop();
+            $params = [
+                'template_id' => $id,
+                'sender' => $this->config['FROM_EMAIL'],
+                'receiver' => implode(",",$receivers),
+                'status' => $result ? "1":"2",
+                'cc' => $temp['cc'],
+                'send_time' => time(),
+                'cron_time' => $endPoint,
+                'is_html' => $temp['is_html'],
+                'subject' => $temp['subject'],
+                'body' => $temp['body'],
+                'send_template' => $this->getTemplateClass(),
+                'runtime' => $time->spent(),
+                'created_at' => time(),
+                'attempt_num'=> $attempt_num,
+                'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
+            ];
+
+            //添加记录
+            $this->addRecord($params);
+
+
+            //记录发送成功与失败的数量
+            if ($result)
+            {
+                $this->addSentOkNum($id);
+            }else{
+                $this->addSentFailNum($id);
+            }
+
+            //释放内存
+            //$emailObj = null;
+            $errors = null;
+            $time = null;
+            $params = null;
+            $emailObj->clearAddresses();
+            $emailObj->clearAttachments();
+        }
+        $this->releaseLock($id);
+        $emailObj = null;
+        return $result;
     }
 }

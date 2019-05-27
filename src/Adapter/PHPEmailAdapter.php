@@ -172,4 +172,22 @@ class PHPEmailAdapter implements AdapterInterface
         $this->phpMail->addReplyTo($email, $username);
     }
 
+    /**
+     * 清理收件人
+     * @return mixed
+     */
+    public function clearAddresses()
+    {
+        $this->phpMail->clearAddresses();
+    }
+
+    /**
+     * 清理附件
+     * @return mixed
+     */
+    public function clearAttachments()
+    {
+        $this->phpMail->clearAttachments();
+    }
+
 }
