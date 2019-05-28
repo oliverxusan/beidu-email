@@ -673,7 +673,8 @@ abstract class AbstractEmail implements EmailInterface
         if (empty($group))
             throw new EmailException("分组数据未获取到");
         foreach ($group as $g){
-            $receivers = $g['email'];
+            //添加收件人
+            $receivers = isset($g['email']) ? $g['email'] : '';
             if (!$receivers) {
                 $error = [
                     'template_class'=>$this->parseTemplate($this->getTemplateClass()),
@@ -687,6 +688,16 @@ abstract class AbstractEmail implements EmailInterface
             foreach ($receivers as $value) {
                 $emailObj->addAddress($value);
             }
+            //添加邮件的标题
+            $subject = isset($g['subject']) ? $g['subject'] : '';
+            if ($subject) {
+                $emailObj->setSubject($subject);
+            }
+            //添加邮件的内容
+            $body = isset($g['body']) ? $g['body'] : '';
+            if ($body) {
+                $emailObj->setBody($body);
+            }
             //添加抄送人
             if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
                 foreach ($cc as $c) {
@@ -697,7 +708,8 @@ abstract class AbstractEmail implements EmailInterface
                 }
             }
             //如果附件存在则添加附件
-            if ($attach = $g['attach']) {
+            $attach = isset($g['attach']) ? $g['attach'] : '';
+            if ($attach) {
                 $emailObj->addAttachment($attach);
             }
             //记录消耗时间
@@ -721,8 +733,8 @@ abstract class AbstractEmail implements EmailInterface
                 'send_time' => time(),
                 'cron_time' => $endPoint,
                 'is_html' => $temp['is_html'],
-                'subject' => $temp['subject'],
-                'body' => $temp['body'],
+                'subject' => !empty($subject) ? $subject : $temp['subject'],
+                'body' => !empty($body) ? $body : $temp['body'],
                 'send_template' => $this->getTemplateClass(),
                 'runtime' => $time->spent(),
                 'created_at' => time(),
