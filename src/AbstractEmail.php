@@ -44,9 +44,10 @@ abstract class AbstractEmail implements EmailInterface
     /**
      * 添加错误日志 写入到DB 由派生类实现
      * @param array $param
+     * @param int $templateId 模板ID
      * @return void
      */
-    abstract protected function addError(array $param);
+    abstract protected function addError(array $param, int $templateId);
 
     /**
      * 获取某模板列表数据 从DB获取数据 由派生类实现
@@ -147,7 +148,7 @@ abstract class AbstractEmail implements EmailInterface
         $temp = $this->getTemplate($id);
         if (empty($temp)) {
             $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此模板列表数据','created_at'=>time(),'id'=>$id];
-            $this->addError($error);
+            $this->addError($error,0);
             return false;
         }
         try {
@@ -192,10 +193,9 @@ abstract class AbstractEmail implements EmailInterface
                     $error = [
                         'template_class'=>$this->parseTemplate($this->getTemplateClass()),
                         'reason'=>implode(",",$errors),
-                        'created_at'=>time(),
-                        'id'=>$id
+                        'created_at'=>time()
                     ];
-                    $this->addError($error);
+                    $this->addError($error,$id);
                     $this->releaseLock($id);
                     return false;
                 }
@@ -211,8 +211,8 @@ abstract class AbstractEmail implements EmailInterface
             }
 
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time(),'id'=>$id];
-            $this->addError($error);
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
             $this->releaseLock($id);
             return false;
         }
@@ -227,8 +227,8 @@ abstract class AbstractEmail implements EmailInterface
     public function sendAgain(int $id){
         $log = $this->getSentLogInfo($id);
         if (empty($log)) {
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此日志数据','created_at'=>time(),'id'=>0];
-            $this->addError($error);
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此日志数据','created_at'=>time()];
+            $this->addError($error,0);
             return false;
         }
         try {
@@ -285,9 +285,8 @@ abstract class AbstractEmail implements EmailInterface
                         'template_class'=>$this->parseTemplate($this->getTemplateClass()),
                         'reason'=>implode(",",$errors),
                         'created_at'=>time(),
-                        'id'=>0
                     ];
-                    $this->addError($error);
+                    $this->addError($error,0);
                     return false;
                 }
                 //如果附件存在则添加附件
@@ -326,8 +325,8 @@ abstract class AbstractEmail implements EmailInterface
             }
 
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time(),'id'=>0];
-            $this->addError($error);
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,0);
             return false;
         }
     }
@@ -661,8 +660,8 @@ abstract class AbstractEmail implements EmailInterface
             $params = null;
             return $result;
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time(),'id'=>$id];
-            $this->addError($error);
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
         }
@@ -689,10 +688,9 @@ abstract class AbstractEmail implements EmailInterface
                     $error = [
                         'template_class'=>$this->parseTemplate($this->getTemplateClass()),
                         'reason'=> "分组邮件不存在",
-                        'created_at'=>time(),
-                        'id'=>$id
+                        'created_at'=>time()
                     ];
-                    $this->addError($error);
+                    $this->addError($error,$id);
                     continue;
                 }
 
@@ -777,8 +775,8 @@ abstract class AbstractEmail implements EmailInterface
             $emailObj = null;
             return $result;
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time(),'id'=>$id];
-            $this->addError($error);
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
         }

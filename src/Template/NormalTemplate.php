@@ -43,9 +43,10 @@ class NormalTemplate extends AbstractEmail
     /**
      * 添加错误日志 写入到DB 由派生类实现
      * @param array $param
+     * @param int $templateId
      * @return void
      */
-    protected function addError(array $param)
+    protected function addError(array $param, int $templateId)
     {
         // TODO: Implement addError() method.
     }
