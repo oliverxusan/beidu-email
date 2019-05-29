@@ -145,13 +145,13 @@ abstract class AbstractEmail implements EmailInterface
      */
     public function send(int $id)
     {
-        $temp = $this->getTemplate($id);
-        if (empty($temp)) {
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此模板列表数据','created_at'=>time(),'id'=>$id];
-            $this->addError($error,0);
-            return false;
-        }
         try {
+            $temp = $this->getTemplate($id);
+            if (empty($temp)) {
+                $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此模板列表数据','created_at'=>time(),'id'=>$id];
+                $this->addError($error,0);
+                return false;
+            }
             $endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']);
             if ($endPoint && $this->acquireLock($id)) {
 
@@ -225,13 +225,13 @@ abstract class AbstractEmail implements EmailInterface
      * @return mixed
      */
     public function sendAgain(int $id){
-        $log = $this->getSentLogInfo($id);
-        if (empty($log)) {
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此日志数据','created_at'=>time()];
-            $this->addError($error,0);
-            return false;
-        }
         try {
+            $log = $this->getSentLogInfo($id);
+            if (empty($log)) {
+                $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此日志数据','created_at'=>time()];
+                $this->addError($error,0);
+                return false;
+            }
             if ($this->acquireLock($id)) {
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
