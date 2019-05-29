@@ -211,7 +211,7 @@ abstract class AbstractEmail implements EmailInterface
             }
 
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
             $this->addError($error,$id);
             $this->releaseLock($id);
             return false;
@@ -660,7 +660,7 @@ abstract class AbstractEmail implements EmailInterface
             $params = null;
             return $result;
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
             $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
@@ -775,7 +775,7 @@ abstract class AbstractEmail implements EmailInterface
             $emailObj = null;
             return $result;
         }catch (\Exception $e){
-            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
             $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
