@@ -215,6 +215,11 @@ abstract class AbstractEmail implements EmailInterface
             $this->addError($error,$id);
             $this->releaseLock($id);
             return false;
+        }catch (\Error $e){
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
+            $this->releaseLock($id);
+            return false;
         }
 
     }
@@ -327,6 +332,11 @@ abstract class AbstractEmail implements EmailInterface
         }catch (\Exception $e){
             $error = ['template_class'=>$this->getTemplateClass(),'reason'=>$e->getMessage(),'created_at'=>time()];
             $this->addError($error,0);
+            return false;
+        }catch (\Error $e){
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
+            $this->releaseLock($id);
             return false;
         }
     }
@@ -664,6 +674,11 @@ abstract class AbstractEmail implements EmailInterface
             $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
+        }catch (\Error $e){
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
+            $this->releaseLock($id);
+            return false;
         }
     }
 
@@ -779,6 +794,11 @@ abstract class AbstractEmail implements EmailInterface
             $this->addError($error,$id);
             $this->releaseLock($id);
             return $error;
+        }catch (\Error $e){
+            $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
+            $this->addError($error,$id);
+            $this->releaseLock($id);
+            return false;
         }
     }
 }
