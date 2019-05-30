@@ -153,7 +153,7 @@ abstract class AbstractEmail implements EmailInterface
                 return false;
             }
             $endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']);
-            if ($endPoint && $this->acquireLock($id)) {
+            if ($this->acquireLock($id) && $endPoint) {
 
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
