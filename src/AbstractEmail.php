@@ -72,7 +72,7 @@ abstract class AbstractEmail implements EmailInterface
     /**
      * 添加发送记录 写入到DB 由派生类实现
      * @param array $param
-     * @return void
+     * @return int $lastInsertId
      */
     abstract protected function addRecord(array $param);
 
@@ -148,12 +148,17 @@ abstract class AbstractEmail implements EmailInterface
         try {
             $temp = $this->getTemplate($id);
             if (empty($temp)) {
-                $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此模板列表数据','created_at'=>time(),'id'=>$id];
+                $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'找不到此模板列表数据','created_at'=>time()];
                 $this->addError($error,0);
                 return false;
             }
+            //检测是否已经到达指定的时间截点
             $endPoint = $this->isCronTime($id,$temp['cron_day'],$temp['cron_hour'],$temp['cron_minute']);
-            if ($endPoint && $this->acquireLock($id)) {
+            if ($endPoint === false) {
+                return false;
+            }
+            //先加锁成功之后 再去判断是否已经发送过
+            if ($this->acquireLock($id) && !$this->checkTodayIsSent($id,$endPoint)) {
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
 
@@ -478,7 +483,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param $day
      * @param $hour
      * @param $minute
-     * @return bool
+     * @return bool | string
      */
     public function isCronTime($id, $day, $hour, $minute){
         if ($this->isEmpty($day) && $this->isEmpty($hour) && $this->isEmpty($minute)) {
@@ -510,10 +515,8 @@ abstract class AbstractEmail implements EmailInterface
                 $flag3 = intval(date("i")) == intval($minute) ? true : false;
             }
         }
-        $endPoint = $this->getEndPoint($day, $hour, $minute);
-
-        if ($flag1 && $flag2 && $flag3 && !$this->checkTodayIsSent($id,$endPoint)) {
-            return $endPoint;
+        if ($flag1 && $flag2 && $flag3) {
+            return $this->getEndPoint($day, $hour, $minute);
         }else{
             return false;
         }
@@ -621,6 +624,27 @@ abstract class AbstractEmail implements EmailInterface
             if ($attach = $this->getAttachments()) {
                 $emailObj->addAttachment($attach);
             }
+
+            $params = [
+                'template_id' => $id,
+                'sender' => $this->config['FROM_EMAIL'],
+                'receiver' => $temp['receivers'],
+                'status' => "0",
+                'cc' => $temp['cc'],
+                'send_time' => time(),
+                'cron_time' => $endPoint,
+                'is_html' => $temp['is_html'],
+                'subject' => $temp['subject'],
+                'body' => $temp['body'],
+                'send_template' => $this->getTemplateClass(),
+                'runtime' => '0',
+                'created_at' => time(),
+                'attempt_num' => '0',
+                'attachment' => ($attach && count($attach) > 0) ? implode(",", $attach) : '',
+            ];
+
+            //添加记录
+            $getLastLogId = $this->addRecord($params);
             //记录消耗时间
             $time = new Timer();
             $time->start();
@@ -633,32 +657,15 @@ abstract class AbstractEmail implements EmailInterface
                 $result = $emailObj->send();
             }
             $time->stop();
-            $params = [
-                'template_id' => $id,
-                'sender' => $this->config['FROM_EMAIL'],
-                'receiver' => $temp['receivers'],
-                'status' => $result ? "1" : "2",
-                'cc' => $temp['cc'],
-                'send_time' => time(),
-                'cron_time' => $endPoint,
-                'is_html' => $temp['is_html'],
-                'subject' => $temp['subject'],
-                'body' => $temp['body'],
-                'send_template' => $this->getTemplateClass(),
-                'runtime' => $time->spent(),
-                'created_at' => time(),
-                'attempt_num' => $attempt_num,
-                'attachment' => ($attach && count($attach) > 0) ? implode(",", $attach) : '',
-            ];
 
-            //添加记录
-            $this->addRecord($params);
 
 
             //记录发送成功与失败的数量
             if ($result) {
+                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num]);
                 $this->addSentOkNum($id);
             } else {
+                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num]);
                 $this->addSentFailNum($id);
             }
             $this->releaseLock($id);
@@ -735,6 +742,27 @@ abstract class AbstractEmail implements EmailInterface
                 if ($attach) {
                     $emailObj->addAttachment($attach);
                 }
+
+                $params = [
+                    'template_id' => $id,
+                    'sender' => $this->config['FROM_EMAIL'],
+                    'receiver' => implode(",",$receivers),
+                    'status' => "0",
+                    'cc' => $temp['cc'],
+                    'send_time' => time(),
+                    'cron_time' => $endPoint,
+                    'is_html' => $temp['is_html'],
+                    'subject' => !empty($subject) ? $subject : $temp['subject'],
+                    'body' => !empty($body) ? $body : $temp['body'],
+                    'send_template' => $this->getTemplateClass(),
+                    'runtime' => 0,
+                    'created_at' => time(),
+                    'attempt_num'=> '0',
+                    'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
+                ];
+
+                //添加记录
+                $getLastLogId = $this->addRecord($params);
                 //记录消耗时间
                 $time = new Timer();
                 $time->start();
@@ -747,33 +775,14 @@ abstract class AbstractEmail implements EmailInterface
                     $result = $emailObj->send();
                 }
                 $time->stop();
-                $params = [
-                    'template_id' => $id,
-                    'sender' => $this->config['FROM_EMAIL'],
-                    'receiver' => implode(",",$receivers),
-                    'status' => $result ? "1":"2",
-                    'cc' => $temp['cc'],
-                    'send_time' => time(),
-                    'cron_time' => $endPoint,
-                    'is_html' => $temp['is_html'],
-                    'subject' => !empty($subject) ? $subject : $temp['subject'],
-                    'body' => !empty($body) ? $body : $temp['body'],
-                    'send_template' => $this->getTemplateClass(),
-                    'runtime' => $time->spent(),
-                    'created_at' => time(),
-                    'attempt_num'=> $attempt_num,
-                    'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
-                ];
-
-                //添加记录
-                $this->addRecord($params);
-
 
                 //记录发送成功与失败的数量
                 if ($result)
                 {
+                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num]);
                     $this->addSentOkNum($id);
                 }else{
+                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num]);
                     $this->addSentFailNum($id);
                 }
 

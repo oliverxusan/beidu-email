@@ -63,7 +63,7 @@ class NormalTemplate extends AbstractEmail
     /**
      * 添加发送记录 写入到DB 由派生类实现
      * @param array $param
-     * @return void
+     * @return int $lastInsertId
      */
     protected function addRecord(array $param)
     {

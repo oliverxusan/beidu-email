@@ -3,71 +3,114 @@
  * Created by Oliver xu.
  * User: Administrator
  * Date: 2019/5/16
- * Time: 10:45
+ * Time: 10:42
  */
 
 namespace Email\Contract;
 
 
-interface AdapterInterface
+interface EmailInterface
 {
-
     /**
-     * 添加抄送人
-     * @param string $email
-     * @param string $username
-     * @return object
-     */
-    public function addCC($email, $username);
-
-    /**
-     * 添加附件
-     * @param array $attach
+     * 发送邮件
+     * @param int $id
      * @return mixed
      */
-    public function addAttachment(array $attach);
+    public function send(int $id);
 
     /**
-     * 设置邮件标题
+     * 再一次发送邮件
+     * @param int $id
+     * @return mixed
+     */
+    public function sendAgain(int $id);
+
+    /**
+     * 获取工厂实例
+     * @return mixed
+     */
+    public function getFactory();
+
+    /**
+     * 设置配置文件
+     * @param array $config
+     * @return mixed
+     */
+    public function setConfig(array $config);
+
+    /**
+     * 解析模板类
+     * @param string $name
+     * @return string
+     */
+    public function parseTemplate(string $name);
+
+    /**
+     * 检查邮件标题是否为空
      * @param string $subject
-     * @return void
-     */
-    public function setSubject($subject);
-
-    /**
-     *  设置邮件主体
-     * @param string $body
-     * @return void
-     */
-    public function setBody($body);
-
-    /**
-     * 邮件发送
      * @return bool
      */
-    public function send();
+    public function isSubject(string $subject);
 
     /**
-     * 设置接收人
-     * @param string $email
-     * @param string $username
-     * @return mixed
+     * 检查邮件正文是否为空
+     * @param string $body
+     * @return bool
      */
-    public function addAddress($email, $username);
+    public function isBody(string $body);
 
     /**
-     * 设置发送者
-     * @param string $email
-     * @param string $username
-     * @return mixed
+     * 状态是否开启
+     * @param int $status
+     * @return bool
      */
-    public function setFrom($email, $username);
+    public function isStatus(int $status);
 
     /**
-     * 设置回复者
-     * @param string $email
-     * @param string $username
+     * 解析接收者
+     * @param string $receivers
      * @return mixed
      */
-    public function addReplyTo($email, $username);
+    public function parseReceivers(string $receivers);
+
+
+    /**
+     * 是否以html格式发送邮件
+     * @param $isHtml
+     * @return bool
+     */
+    public function isHtml($isHtml);
+
+    /**
+     * 是否在指定的时间
+     * @param $id
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return bool | string
+     */
+    public function isCronTime($id, $day, $hour, $minute);
+
+    /**
+     * 解析附件
+     * @param $attachment
+     * @return null|array
+     */
+    public function parseAttachment($attachment);
+
+    /**
+     * 判断值是否为空 为空则返回true 否则返回false
+     * @param string $value
+     * @return boolen
+     */
+    public function isEmpty($value);
+
+    /**
+     * 获取一个发送时间点
+     * @param $day
+     * @param $hour
+     * @param $minute
+     * @return string
+     */
+    public function getEndPoint($day, $hour, $minute);
 }
