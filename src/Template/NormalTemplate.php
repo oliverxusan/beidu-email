@@ -135,7 +135,7 @@ class NormalTemplate extends AbstractEmail
      *  加锁 一般使用reids 进行加锁 幂等提交 默认返回类型必须是true 要不然重新发送会发不出
      * @return bool default true
      */
-    protected function acquireLock()
+    protected function acquireLock(int $id)
     {
         // TODO: Implement acquireLock() method.
     }
