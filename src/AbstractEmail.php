@@ -158,7 +158,7 @@ abstract class AbstractEmail implements EmailInterface
                 return false;
             }
             //先加锁成功之后 再去判断是否已经发送过
-            if ($this->acquireLock($id) && !$this->checkTodayIsSent($id,$endPoint)) {
+            if (!$this->checkTodayIsSent($id,$endPoint) && $this->acquireLock($id)) {
                 //记录上一次发送时间
                 $this->addLastSendTime($id);
 
@@ -339,7 +339,7 @@ abstract class AbstractEmail implements EmailInterface
             return false;
         }catch (\Error $e){
             $error = ['template_class'=>$this->getTemplateClass(),'reason'=>'file:'.$e->getFile().';line:'.$e->getLine().';mesage:'.$e->getMessage(),'created_at'=>time()];
-            $this->addError($error,$id);
+            $this->addError($error,0);
             $this->releaseLock($id);
             return false;
         }
@@ -620,10 +620,6 @@ abstract class AbstractEmail implements EmailInterface
                         $emailObj->addCC($c['email']);
                 }
             }
-            //如果附件存在则添加附件
-            if ($attach = $this->getAttachments()) {
-                $emailObj->addAttachment($attach);
-            }
 
             $params = [
                 'template_id' => $id,
@@ -640,11 +636,17 @@ abstract class AbstractEmail implements EmailInterface
                 'runtime' => '0',
                 'created_at' => time(),
                 'attempt_num' => '0',
-                'attachment' => ($attach && count($attach) > 0) ? implode(",", $attach) : '',
+                'attachment' => '',
             ];
 
             //添加记录
             $getLastLogId = $this->addRecord($params);
+
+            //如果附件存在则添加附件
+            if ($attach = $this->getAttachments()) {
+                $emailObj->addAttachment($attach);
+            }
+            $attachment = ($attach && count($attach) > 0) ? implode(",", $attach) : '';
             //记录消耗时间
             $time = new Timer();
             $time->start();
@@ -662,10 +664,10 @@ abstract class AbstractEmail implements EmailInterface
 
             //记录发送成功与失败的数量
             if ($result) {
-                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num]);
+                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num,'attachment'=>$attachment]);
                 $this->addSentOkNum($id);
             } else {
-                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num]);
+                $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num,'attachment'=>$attachment]);
                 $this->addSentFailNum($id);
             }
             $this->releaseLock($id);
@@ -711,7 +713,7 @@ abstract class AbstractEmail implements EmailInterface
                         'reason'=> "分组邮件不存在",
                         'created_at'=>time()
                     ];
-                    $this->addError($error,$id);
+                    $this->addError($error,0);
                     continue;
                 }
 
@@ -737,12 +739,6 @@ abstract class AbstractEmail implements EmailInterface
                             $emailObj->addCC($c['email']);
                     }
                 }
-                //如果附件存在则添加附件
-                $attach = isset($g['attach']) ? $g['attach'] : '';
-                if ($attach) {
-                    $emailObj->addAttachment($attach);
-                }
-
                 $params = [
                     'template_id' => $id,
                     'sender' => $this->config['FROM_EMAIL'],
@@ -758,11 +754,25 @@ abstract class AbstractEmail implements EmailInterface
                     'runtime' => 0,
                     'created_at' => time(),
                     'attempt_num'=> '0',
-                    'attachment'=> ($attach && count($attach) > 0) ? implode(",",$attach) : '',
+                    'attachment'=> '',
                 ];
 
                 //添加记录
                 $getLastLogId = $this->addRecord($params);
+                //如果附件存在则添加附件
+                $attach = isset($g['attach']) ? $g['attach'] : '';
+                $arr_attach = [];
+                if ($attach) {
+                    foreach ($attach as $at) {
+                        if (is_file($at)) {
+                            $arr_attach[] = $at;
+                        }
+                    }
+                    if (count($arr_attach) > 0) {
+                        $emailObj->addAttachment($arr_attach);
+                    }
+                }
+                $attachment = count($arr_attach) > 0 ? implode(",",$arr_attach) : '';
                 //记录消耗时间
                 $time = new Timer();
                 $time->start();
@@ -779,10 +789,10 @@ abstract class AbstractEmail implements EmailInterface
                 //记录发送成功与失败的数量
                 if ($result)
                 {
-                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num]);
+                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'1','attempt_num'=>$attempt_num,'attachment'=>$attachment]);
                     $this->addSentOkNum($id);
                 }else{
-                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num]);
+                    $this->saveRecord($getLastLogId,['runtime'=>$time->spent(),'status'=>'2','attempt_num'=>$attempt_num,'attachment'=>$attachment]);
                     $this->addSentFailNum($id);
                 }
 
