@@ -87,7 +87,7 @@ interface EmailInterface
      * @param $day
      * @param $hour
      * @param $minute
-     * @return boolen
+     * @return bool | string
      */
     public function isCronTime($id, $day, $hour, $minute);
 
