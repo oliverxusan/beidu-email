@@ -718,7 +718,14 @@ abstract class AbstractEmail implements EmailInterface
                 }
 
                 foreach ($receivers as $value) {
-                    $emailObj->addAddress($value);
+                    if(is_array($value)){
+                        if (!empty($value['username']))
+                            $emailObj->addAddress($value['email'],$value['username']);
+                        else
+                            $emailObj->addAddress($value['email']);
+                    }else{
+                        $emailObj->addAddress($value);
+                    }
                 }
                 //添加邮件的标题
                 $subject = isset($g['subject']) ? $g['subject'] : '';
@@ -731,7 +738,14 @@ abstract class AbstractEmail implements EmailInterface
                     $emailObj->setBody($body);
                 }
                 //添加抄送人
-                if (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
+                if(isset($g['cc'])&&!empty($g['cc'])){
+                    foreach ($g['cc'] as $c) {
+                        if (!empty($c['username']))
+                            $emailObj->addCC($c['email'], $c['username']);
+                        else
+                            $emailObj->addCC($c['email']);
+                    }
+                }elseif (!is_null($temp['cc']) && $cc = $this->parseReceivers($temp['cc'])) {
                     foreach ($cc as $c) {
                         if (!empty($c['username']))
                             $emailObj->addCC($c['email'], $c['username']);
