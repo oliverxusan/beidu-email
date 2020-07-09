@@ -19,7 +19,7 @@ class NormalTemplate extends AbstractEmail
      * @param int $id
      * @return array
      */
-    public function getTemplate(int $id)
+    public function getTemplate($id)
     {
         return [
             'id' => 1,
@@ -46,7 +46,7 @@ class NormalTemplate extends AbstractEmail
      * @param int $templateId
      * @return void
      */
-    protected function addError(array $param, int $templateId)
+    protected function addError($param, $templateId)
     {
         // TODO: Implement addError() method.
     }
@@ -65,7 +65,7 @@ class NormalTemplate extends AbstractEmail
      * @param array $param
      * @return int $lastInsertId
      */
-    protected function addRecord(array $param)
+    protected function addRecord($param)
     {
         // TODO: Implement addRecord() method.
     }
@@ -135,7 +135,7 @@ class NormalTemplate extends AbstractEmail
      *  加锁 一般使用reids 进行加锁 幂等提交 默认返回类型必须是true 要不然重新发送会发不出
      * @return bool default true
      */
-    protected function acquireLock(int $id)
+    protected function acquireLock($id)
     {
         // TODO: Implement acquireLock() method.
     }
@@ -156,7 +156,7 @@ class NormalTemplate extends AbstractEmail
      * @param array $param
      * @return mixed
      */
-    protected function saveRecord(int $id, array $param)
+    protected function saveRecord($id, $param)
     {
         // TODO: Implement saveRecord() method.
     }

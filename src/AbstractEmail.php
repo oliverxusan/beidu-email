@@ -47,14 +47,14 @@ abstract class AbstractEmail implements EmailInterface
      * @param int $templateId 模板ID
      * @return void
      */
-    abstract protected function addError(array $param, int $templateId);
+    abstract protected function addError($param, $templateId);
 
     /**
      * 获取某模板列表数据 从DB获取数据 由派生类实现
      * @param int $id
      * @return array
      */
-    abstract protected function getTemplate(int $id);
+    abstract protected function getTemplate($id);
 
     /**
      * 获取发送日志信息 从DB获取数据 由派生类实现
@@ -74,7 +74,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param array $param
      * @return int $lastInsertId
      */
-    abstract protected function addRecord(array $param);
+    abstract protected function addRecord($param);
 
     /**
      * 添加发送成功记录数和总数
@@ -130,7 +130,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param array $param
      * @return mixed
      */
-    abstract protected function saveRecord(int $id, array $param);
+    abstract protected function saveRecord($id, $param);
 
     /**
      * 获取发送不同人的邮件和附件 分组发送
@@ -143,7 +143,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param int $id
      * @return mixed
      */
-    public function send(int $id)
+    public function send($id)
     {
         try {
             $temp = $this->getTemplate($id);
@@ -233,7 +233,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param int $id
      * @return mixed
      */
-    public function sendAgain(int $id){
+    public function sendAgain($id){
         try {
             $log = $this->getSentLogInfo($id);
             if (empty($log)) {
@@ -357,7 +357,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param array $config
      * @return mixed
      */
-    public function setConfig(array $config) {
+    public function setConfig($config) {
         if (!empty($config)){
             $this->config = array_merge($this->config,$config);
         }
@@ -376,7 +376,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param string $name
      * @return string
      */
-    public function parseTemplate(string $name){
+    public function parseTemplate($name){
         if (empty($name))
             throw new EmailException("解析模板的名字为空");
         $fileArray = explode("\\",$name);
@@ -392,7 +392,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param string $subject
      * @return bool
      */
-    public function isSubject(string $subject) {
+    public function isSubject($subject) {
         return !empty($subject);
     }
     /**
@@ -400,7 +400,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param string $body
      * @return bool
      */
-    public function isBody(string $body) {
+    public function isBody($body) {
         return !empty($body);
     }
     /**
@@ -408,7 +408,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param int $status
      * @return bool
      */
-    public function isStatus(int $status) {
+    public function isStatus($status) {
         return $status == 1;
     }
     /**
@@ -416,7 +416,7 @@ abstract class AbstractEmail implements EmailInterface
      * @param string $receivers
      * @return mixed
      */
-    public function parseReceivers(string $receivers) {
+    public function parseReceivers($receivers) {
         $data = [];
         if (empty($receivers))
             return $data;

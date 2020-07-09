@@ -30,7 +30,7 @@ class PHPEmailAdapter implements AdapterInterface
      * @param array $config
      * @return mixed
      */
-    protected function setConfig(array $config)
+    protected function setConfig($config)
     {
         $this->phpMail->SMTPDebug = $config['DEBUG'] ? $config['DEBUG'] : 0;                                       // Enable verbose debug output
         if ($config['ISSMTP']) {
@@ -72,7 +72,7 @@ class PHPEmailAdapter implements AdapterInterface
      * @return object
      * @throws EmailException
      */
-    public function addAttachment(array $attach)
+    public function addAttachment($attach)
     {
         if (count($attach) > 0) {
             foreach ($attach as $a) {

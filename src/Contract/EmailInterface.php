@@ -16,14 +16,14 @@ interface EmailInterface
      * @param int $id
      * @return mixed
      */
-    public function send(int $id);
+    public function send($id);
 
     /**
      * 再一次发送邮件
      * @param int $id
      * @return mixed
      */
-    public function sendAgain(int $id);
+    public function sendAgain($id);
 
     /**
      * 获取工厂实例
@@ -36,42 +36,42 @@ interface EmailInterface
      * @param array $config
      * @return mixed
      */
-    public function setConfig(array $config);
+    public function setConfig($config);
 
     /**
      * 解析模板类
      * @param string $name
      * @return string
      */
-    public function parseTemplate(string $name);
+    public function parseTemplate($name);
 
     /**
      * 检查邮件标题是否为空
      * @param string $subject
      * @return bool
      */
-    public function isSubject(string $subject);
+    public function isSubject($subject);
 
     /**
      * 检查邮件正文是否为空
      * @param string $body
      * @return bool
      */
-    public function isBody(string $body);
+    public function isBody($body);
 
     /**
      * 状态是否开启
      * @param int $status
      * @return bool
      */
-    public function isStatus(int $status);
+    public function isStatus($status);
 
     /**
      * 解析接收者
      * @param string $receivers
      * @return mixed
      */
-    public function parseReceivers(string $receivers);
+    public function parseReceivers($receivers);
 
 
     /**

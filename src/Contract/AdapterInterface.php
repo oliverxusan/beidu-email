@@ -25,7 +25,7 @@ interface AdapterInterface
      * @param array $attach
      * @return mixed
      */
-    public function addAttachment(array $attach);
+    public function addAttachment($attach);
 
     /**
      * 设置邮件标题
